@@ -15,6 +15,13 @@ class HerdImmunity:
 	def __init__(self, **kwargs):
 		self.version = kwargs['version'] if 'version' in kwargs else '0.0.0'
 		self._debugging = kwargs['debugging'] if 'debugging' in kwargs else False
+		# simulation settings
+		self._entity_velocity = 20 # in px/seconds
+		self._initial_virus_carrier_number = 2
+		self._entity_number = 25
+		self._infection_chance = 12 # 0-100 %
+		self._healing_time = 12 # in seconds
+		self._immunity_time = 30 # in seconds
 
 	""" Main entry point """
 	def run_app(self):
@@ -53,6 +60,18 @@ class HerdImmunity:
 
 	def change_simulation_speed(self, speed_ratio):
 		self.print_debug('Changing simulation speed to ' + str(speed_ratio) + 'x')
+
+	""" Entity class """
+	class Entity:
+		STATE_HEALTHY = 1
+		STATE_INFECTED = 2
+		STATE_IMMUNE = 3
+
+		def __init__(self, state, position, direction):
+			self.state = state
+			self.position = position # (x, y)
+			self.direction = direction # 0-2π
+			self.state_time = 0 # in seconds
 
 	""" Print debug message """
 	def print_debug(self, text):
