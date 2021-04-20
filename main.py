@@ -315,15 +315,38 @@ class MainThread(threading.Thread):
 	""" Inherited function - call start() instead """
 	def run(self):
 		self.print_debug('Thread is running...')
+		self._time = 0 # in milliseconds
 		self._is_running = True
 		self._s_paused = False
 		self._s_started = False
 		while self._is_running:
 			if self._s_started:
 				if not self._s_paused:
-					self.print_debug('I\'m running :D')
-				else:
-					self.print_debug('I\'m paused (but still running)')
+					# infect new entities
+
+					# change entity states if necessary
+
+					# move entities
+					for entity in self._herdimmunity.entities:
+						s = self._herdimmunity.entity_velocity * self._tick / 1000.0 * self._herdimmunity.speed_ratio
+						dx = math.cos(entity.direction) * s
+						dy = math.sin(entity.direction) * s
+						nx = entity.position[0] + dx
+						ny = entity.position[1] + dy
+						if nx < 0:
+							nx = entity.position[0] - dx
+							entity.direction = math.pi - entity.direction
+						elif nx > self._herdimmunity.area_size[0]:
+							nx = entity.position[0] - dx
+							entity.direction = math.pi - entity.direction
+						if ny < 0:
+							ny = entity.position[1] - dy
+							entity.direction = 2 * math.pi - entity.direction
+						elif ny > self._herdimmunity.area_size[1]:
+							ny = entity.position[1] - dy
+							entity.direction = 2 * math.pi - entity.direction
+						self.print_debug(f"id: {entity.id}, x: {entity.position[0]}, y: {entity.position[1]} -> dx: {dx}, dy: {dy} -> nx: {nx}, ny: {ny}")
+						entity.position = (nx, ny)
 				self._herdimmunity.refresh_simulation_area()
 			else:
 				self.print_debug('I\'m stopped (but still running)')
