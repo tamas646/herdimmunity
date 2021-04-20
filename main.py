@@ -15,6 +15,7 @@ class HerdImmunity:
 	def __init__(self, **kwargs):
 		self.version = kwargs['version'] if 'version' in kwargs else '0.0.0'
 		self._debugging = kwargs['debugging'] if 'debugging' in kwargs else False
+		self.entities = []
 		# simulation settings
 		self._entity_velocity = 20 # in px/seconds
 		self._initial_virus_carrier_number = 2
@@ -85,9 +86,14 @@ class HerdImmunity:
 	def stop_simulation(self):
 		self.print_debug('Stopping simulation...')
 		self._main_thread.s_stop()
+		self.entities = []
+		self.refresh_simulation_area()
 
 	def change_simulation_speed(self, speed_ratio):
 		self.print_debug('Changing simulation speed to ' + str(speed_ratio) + 'x')
+
+	def refresh_simulation_area(self):
+		self._window.render_area()
 
 	""" Entity class """
 	class Entity:
@@ -265,6 +271,10 @@ class MainWindow(Gtk.Window):
 		height = self._drawing_area.get_allocated_height() - 2 * self._border_width - 2 * self._entity_radius
 		return (width, height)
 
+	""" Redraw DrawingArea """
+	def render_area(self):
+		self._drawing_area.queue_draw_area(0, 0, self._drawing_area.get_allocated_width(), self._drawing_area.get_allocated_height())
+
 	""" Print debug message """
 	def print_debug(self, text):
 		if self._debugging:
@@ -299,6 +309,7 @@ class MainThread(threading.Thread):
 					self.print_debug('I\'m running :D')
 				else:
 					self.print_debug('I\'m paused (but still running)')
+				self._herdimmunity.refresh_simulation_area()
 			else:
 				self.print_debug('I\'m stopped (but still running)')
 			time.sleep(self._tick / 1000.0)
