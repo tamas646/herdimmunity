@@ -236,7 +236,6 @@ class MainWindow(Gtk.Window):
 		context.rectangle(max_width - self._border_width, 0, max_width, max_height)
 		context.rectangle(0, 0, max_width, self._border_width)
 		context.fill()
-		# context.stroke()
 		# draw entities
 		for entity in self._herdimmunity.entities:
 			color = self._entity_color[entity.state]
@@ -349,8 +348,6 @@ class MainThread(threading.Thread):
 						self.print_debug(f"id: {entity.id}, x: {entity.position[0]}, y: {entity.position[1]} -> dx: {dx}, dy: {dy} -> nx: {nx}, ny: {ny}")
 						entity.position = (nx, ny)
 				self._herdimmunity.refresh_simulation_area()
-			else:
-				self.print_debug('I\'m stopped (but still running)')
 			time.sleep(self._tick / 1000.0)
 		self.print_debug('Thread stopped')
 
