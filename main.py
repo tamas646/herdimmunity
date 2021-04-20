@@ -213,6 +213,11 @@ class MainWindow(Gtk.Window):
 		self._border_color = (0.7, 0.7, 0.7)
 		self._border_width = 10
 		self._entity_radius = 5
+		self._entity_color = {
+			HerdImmunity.Entity.STATE_HEALTHY: (0, 1, 0),
+			HerdImmunity.Entity.STATE_INFECTED: (1, 0, 0),
+			HerdImmunity.Entity.STATE_IMMUNE: (0, 0, 1),
+		}
 
 	""" Button events """
 	def _draw(self, widget, context):
@@ -226,7 +231,13 @@ class MainWindow(Gtk.Window):
 		context.rectangle(max_width - self._border_width, 0, max_width, max_height)
 		context.rectangle(0, 0, max_width, self._border_width)
 		context.fill()
-		context.stroke()
+		# context.stroke()
+		# draw entities
+		for entity in self._herdimmunity.entities:
+			color = self._entity_color[entity.state]
+			context.set_source_rgb(color[0], color[1], color[2])
+			context.arc(self._border_width + entity.position[0], self._border_width + entity.position[1], self._entity_radius, 0, 2 * math.pi)
+			context.fill()
 
 	def _start(self, widget):
 		self.print_debug('Start button clicked')
