@@ -174,6 +174,7 @@ class MainWindow(Gtk.Window):
 		self._speedup_ratio = 2
 		self._border_color = (0.7, 0.7, 0.7)
 		self._border_width = 10
+		self._entity_radius = 5
 
 	""" Button events """
 	def _draw(self, widget, context):
