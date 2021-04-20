@@ -1,7 +1,7 @@
 #!/usr/bin/python3.7
 import gi, math, cairo, threading, time
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, Gio
+from gi.repository import Gtk, Gio, Gdk, GLib
 from random import *
 from datetime import datetime
 
@@ -90,14 +90,15 @@ class HerdImmunity:
 		self.print_debug('Stopping simulation...')
 		self._main_thread.s_stop()
 		self.entities = []
-		self.refresh_simulation_area()
+		self.refresh_simulation_area(0)
 
 	def change_simulation_speed(self, speed_ratio):
 		self.print_debug('Changing simulation speed to ' + str(speed_ratio) + 'x')
 		self.speed_ratio = speed_ratio
 
-	def refresh_simulation_area(self):
+	def refresh_simulation_area(self, time):
 		self._window.render_area()
+		Gdk.threads_add_idle(GLib.PRIORITY_DEFAULT_IDLE, self._window.display_info, time)
 
 	""" Entity class """
 	class Entity:
@@ -192,8 +193,8 @@ class MainWindow(Gtk.Window):
 
 		# Information box
 		info_area = Gtk.Box(width_request=200, orientation=Gtk.Orientation.VERTICAL)
-		self.status_label = Gtk.Label(label='Megállítva')
-		info_area.pack_start(self.status_label, True, True, 0)
+		self._status_label = Gtk.Label(label='Megállítva')
+		info_area.pack_start(self._status_label, True, True, 0)
 
 		box.pack_start(self._drawing_area, True, True, 0)
 		box.pack_start(info_area, False, False, 0)
@@ -290,6 +291,10 @@ class MainWindow(Gtk.Window):
 	def render_area(self):
 		self._drawing_area.queue_draw()
 
+	""" Display simulation info """
+	def display_info(self, time):
+		self._status_label.set_label(str(time))
+
 	""" Print debug message """
 	def print_debug(self, text):
 		if self._debugging:
@@ -347,7 +352,11 @@ class MainThread(threading.Thread):
 							entity.direction = 2 * math.pi - entity.direction
 						self.print_debug(f"id: {entity.id}, x: {entity.position[0]}, y: {entity.position[1]} -> dx: {dx}, dy: {dy} -> nx: {nx}, ny: {ny}")
 						entity.position = (nx, ny)
-				self._herdimmunity.refresh_simulation_area()
+					# increase time
+					self._time += self._tick * self._herdimmunity.speed_ratio
+				self._herdimmunity.refresh_simulation_area(self._time)
+			else:
+				self._time = 0
 			time.sleep(self._tick / 1000.0)
 		self.print_debug('Thread stopped')
 
