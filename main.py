@@ -19,7 +19,6 @@ class HerdImmunity:
 		self.speed_ratio = 1
 		self.entities = []
 		# simulation settings
-		self._entity_velocity = 20 # in px/seconds
 		self.entity_velocity = 20 # in px/seconds
 		self._initial_virus_carrier_number = 2
 		self._entity_number = 25
