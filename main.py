@@ -136,7 +136,7 @@ class MainWindow(Gtk.Window):
 		self._debugging = kwargs['debugging'] if 'debugging' in kwargs else True
 		self.print_debug('Preparing main window...')
 		Gtk.Window.__init__(self)
-		self.set_default_size(800, 400)
+		self.set_default_size(600, 300)
 		self.set_resizable(True)
 
 		# -----------  Header bar  -----------
@@ -188,6 +188,7 @@ class MainWindow(Gtk.Window):
 
 		# Drawing area
 		self._drawing_area = Gtk.DrawingArea()
+		self._drawing_area.set_size_request(360, 260)
 
 		# Information box
 		info_area = Gtk.Box(width_request=200, orientation=Gtk.Orientation.VERTICAL)
@@ -288,7 +289,7 @@ class MainWindow(Gtk.Window):
 
 	""" Redraw DrawingArea """
 	def render_area(self):
-		self._drawing_area.queue_draw_area(0, 0, self._drawing_area.get_allocated_width(), self._drawing_area.get_allocated_height())
+		self._drawing_area.queue_draw()
 
 	""" Print debug message """
 	def print_debug(self, text):
