@@ -330,7 +330,15 @@ class MainThread(threading.Thread):
 					# infect new entities
 
 					# change entity states if necessary
-
+					for entity in self._herdimmunity.entities:
+						if entity.state == HerdImmunity.Entity.STATE_INFECTED:
+							if entity.state_time + self._herdimmunity.healing_time * 1000 <= self._time:
+								entity.state = HerdImmunity.Entity.STATE_IMMUNE
+								entity.state_time = self._time
+						elif entity.state == HerdImmunity.Entity.STATE_IMMUNE:
+							if entity.state_time + self._herdimmunity.immunity_time * 1000 <= self._time:
+								entity.state = HerdImmunity.Entity.STATE_HEALTHY
+								entity.state_time = self._time
 					# move entities
 					for entity in self._herdimmunity.entities:
 						s = self._herdimmunity.entity_velocity * self._tick / 1000.0 * self._herdimmunity.speed_ratio
