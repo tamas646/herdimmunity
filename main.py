@@ -215,6 +215,63 @@ class MainWindow(Gtk.Window):
 
 # ======  End of MainWindow Class  =======
 
+
+# ========================================
+# =           MainThread Class           =
+# ========================================
+
+class MainThread(threading.Thread):
+
+	""" Constructor """
+	def __init__(self, herdimmunity, **kwargs):
+		super(MainThread, self).__init__()
+		self._herdimmunity = herdimmunity
+		self._debugging = kwargs['debugging'] if 'debugging' in kwargs else True
+		self._tick = kwargs['tick'] if 'tick' in kwargs else 100 # in milliseconds
+
+	""" Inherited function - call start() instead """
+	def run(self):
+		self.print_debug('Thread is running...')
+		self._is_running = True
+		self._s_paused = False
+		self._s_started = False
+		while self._is_running:
+			if self._s_started:
+				if not self._s_paused:
+					self.print_debug('I\'m running :D')
+				else:
+					self.print_debug('I\'m paused (but still running)')
+			else:
+				self.print_debug('I\'m stopped (but still running)')
+			time.sleep(self._tick / 1000.0)
+		self.print_debug('Thread stopped')
+
+	""" Controller functions """
+	def s_start(self):
+		self._s_started = True
+
+	def s_pause(self):
+		self._s_paused = True
+
+	def s_continue(self):
+		self._s_paused = False
+
+	def s_stop(self):
+		self._s_started = False
+
+	""" Terminate thread """
+	def stop(self):
+		self._is_running = False
+
+	""" Print debug message """
+	def print_debug(self, text):
+		if self._debugging:
+			self._herdimmunity.print_debug('MainThread: ' + text)
+
+
+# ======  End of MainThread Class  =======
+
+
 # -----------  Start the application  -----------
 
 herdimmunity = HerdImmunity(version='1.0.0', debugging=True)
