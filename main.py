@@ -30,7 +30,7 @@ class HerdImmunity:
 		self._window.connect('delete-event', self.stop_app)
 		self._window.show_all()
 		self._window.init()
-		self._main_thread = MainThread(self, tick=100, debugging=True)
+		self._main_thread = MainThread(self, tick=100, debugging=False)
 		self._main_thread.start()
 		self.print_debug('Executing Gtk.main()...')
 		Gtk.main()
