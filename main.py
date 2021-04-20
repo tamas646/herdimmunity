@@ -103,7 +103,7 @@ class HerdImmunity:
 
 		def __init__(self, index, infected, position, direction):
 			self.id = index
-			self.state = self.STATE_HEALTHY if infected else self.STATE_HEALTHY
+			self.state = self.STATE_INFECTED if infected else self.STATE_HEALTHY
 			self.position = position # (x, y) float
 			self.direction = direction # 0-2π float
 			self.state_time = 0 # in seconds
