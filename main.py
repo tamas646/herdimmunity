@@ -15,14 +15,18 @@ class HerdImmunity:
 	def __init__(self, **kwargs):
 		self.version = kwargs['version'] if 'version' in kwargs else '0.0.0'
 		self._debugging = kwargs['debugging'] if 'debugging' in kwargs else False
+		self.area_size = (0, 0)
+		self.speed_ratio = 1
 		self.entities = []
 		# simulation settings
 		self._entity_velocity = 20 # in px/seconds
+		self.entity_velocity = 20 # in px/seconds
 		self._initial_virus_carrier_number = 2
 		self._entity_number = 25
-		self._infection_chance = 12 # 0-100 %
-		self._healing_time = 12 # in seconds
-		self._immunity_time = 30 # in seconds
+		self.infection_chance = 12 # 0-100 %
+		self.healing_time = 12 # in seconds
+		self.immunity_time = 30 # in seconds
+		self.infectious_distance = 10
 
 	""" Main entry point """
 	def run_app(self):
@@ -31,7 +35,7 @@ class HerdImmunity:
 		self._window.connect('delete-event', self.stop_app)
 		self._window.show_all()
 		self._window.init()
-		self._main_thread = MainThread(self, tick=100, debugging=False)
+		self._main_thread = MainThread(self, tick=20, debugging=False)
 		self._main_thread.start()
 		self.print_debug('Executing Gtk.main()...')
 		Gtk.main()
@@ -56,12 +60,12 @@ class HerdImmunity:
 				index += 1
 			infected_entities.append(index)
 		# request area size
-		area_size = self._window.get_area_size()
+		self.area_size = self._window.get_area_size()
 		# generate entities
 		self.entities = []
 		for i in range(self._entity_number):
 			is_infected = i in infected_entities
-			position = (randint(0, area_size[0] - 1), randint(0, area_size[1] - 1))
+			position = (randint(0, self.area_size[0] - 1), randint(0, self.area_size[1] - 1))
 			direction = uniform(0, math.pi)
 			entity = self.Entity(i, is_infected, position, direction)
 			self.entities.append(entity)
@@ -91,6 +95,7 @@ class HerdImmunity:
 
 	def change_simulation_speed(self, speed_ratio):
 		self.print_debug('Changing simulation speed to ' + str(speed_ratio) + 'x')
+		self.speed_ratio = speed_ratio
 
 	def refresh_simulation_area(self):
 		self._window.render_area()
@@ -104,9 +109,9 @@ class HerdImmunity:
 		def __init__(self, index, infected, position, direction):
 			self.id = index
 			self.state = self.STATE_INFECTED if infected else self.STATE_HEALTHY
-			self.position = position # (x, y) float
-			self.direction = direction # 0-2π float
-			self.state_time = 0 # in seconds
+			self.position = ((float)(position[0]), (float)(position[1])) # (x, y)
+			self.direction = (float)(direction) # 0-2π
+			self.state_time = 0 # in milliseconds
 
 		def __str__(self):
 			return f"{{id: {self.id}, state: {self.state}, position: {self.position}, direction: {self.direction}, state_time: {self.state_time}}}"
@@ -236,7 +241,7 @@ class MainWindow(Gtk.Window):
 		for entity in self._herdimmunity.entities:
 			color = self._entity_color[entity.state]
 			context.set_source_rgb(color[0], color[1], color[2])
-			context.arc(self._border_width + entity.position[0], self._border_width + entity.position[1], self._entity_radius, 0, 2 * math.pi)
+			context.arc(self._border_width + self._entity_radius + entity.position[0], self._border_width + self._entity_radius + entity.position[1], self._entity_radius, 0, 2 * math.pi)
 			context.fill()
 
 	def _start(self, widget):
