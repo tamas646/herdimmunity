@@ -44,6 +44,34 @@ class HerdImmunity:
 	""" Simulation controllers """
 	def start_simulation(self):
 		self.print_debug('Starting simulation...')
+		"""
+		   Generating entities
+		"""
+		# raffle infected entities
+		infected_entities = []
+		for i in range(self._initial_virus_carrier_number):
+			index = randint(1, self._entity_number) - 1
+			while index in infected_entities:
+				index += 1
+			infected_entities.append(index)
+		# request area size
+		area_size = self._window.get_area_size()
+		# generate entities
+		self.entities = []
+		for i in range(self._entity_number):
+			is_infected = i in infected_entities
+			position = (randint(0, area_size[0] - 1), randint(0, area_size[1] - 1))
+			direction = uniform(0, math.pi)
+			entity = self.Entity(i, is_infected, position, direction)
+			self.entities.append(entity)
+		# print entities to debug console
+		debug_output = 'Generated entities: '
+		for entity in self.entities:
+			debug_output += '\n' + str(entity)
+		self.print_debug(debug_output)
+		"""
+			Starting thread
+		"""
 		self._main_thread.s_start()
 
 	def pause_simulation(self):
@@ -67,11 +95,15 @@ class HerdImmunity:
 		STATE_INFECTED = 2
 		STATE_IMMUNE = 3
 
-		def __init__(self, state, position, direction):
-			self.state = state
-			self.position = position # (x, y)
-			self.direction = direction # 0-2π
+		def __init__(self, index, infected, position, direction):
+			self.id = index
+			self.state = self.STATE_HEALTHY if infected else self.STATE_HEALTHY
+			self.position = position # (x, y) float
+			self.direction = direction # 0-2π float
 			self.state_time = 0 # in seconds
+
+		def __str__(self):
+			return f"{{id: {self.id}, state: {self.state}, position: {self.position}, direction: {self.direction}, state_time: {self.state_time}}}"
 
 	""" Print debug message """
 	def print_debug(self, text):
