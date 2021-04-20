@@ -226,6 +226,12 @@ class MainWindow(Gtk.Window):
 	def _properties(self, widget):
 		self.print_debug('Properties button clicked')
 
+	""" Get the 'livable' size of the area """
+	def get_area_size(self):
+		width = self._drawing_area.get_allocated_width() - 2 * self._border_width - 2 * self._entity_radius
+		height = self._drawing_area.get_allocated_height() - 2 * self._border_width - 2 * self._entity_radius
+		return (width, height)
+
 	""" Print debug message """
 	def print_debug(self, text):
 		if self._debugging:
