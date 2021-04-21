@@ -232,6 +232,8 @@ class MainWindow(Gtk.Window):
 		self._stop_button.hide()
 		self._pause_button.set_sensitive(False)
 		self._speedup_button.set_sensitive(False)
+		self._zero_infection_reached = False
+		self._pause_on_zero_infection = True
 		self._speedup_ratio = 5
 		self._border_color = (0.7, 0.7, 0.7)
 		self._border_width = 10
@@ -274,10 +276,12 @@ class MainWindow(Gtk.Window):
 		self.print_debug('Stop button clicked')
 		self._stop_button.hide()
 		self._start_button.show()
+		self._pause_button.set_active(False)
 		self._pause_button.set_sensitive(False)
 		self._speedup_button.set_sensitive(False)
 		self.set_resizable(True)
 		self._herdimmunity.stop_simulation()
+		self._zero_infection_reached = False
 
 	def _pause(self, widget):
 		if widget.get_active():
@@ -332,6 +336,11 @@ class MainWindow(Gtk.Window):
 				count += 1
 			self._infection_label.set_markup(f"<span face='Monospace'>{(int)(infection_sum / count * 100)}%</span>")
 			self._immunity_label.set_markup(f"<span face='Monospace'>{(int)(immunity_sum / count * 100)}%</span>")
+			# pause simulation if infection percentage reach 0
+			if not self._zero_infection_reached and self._pause_on_zero_infection and infection_sum == 0:
+				self.print_debug('Zero infection reached, pause')
+				self._pause_button.set_active(True)
+				self._zero_infection_reached = True
 
 	""" Print debug message """
 	def print_debug(self, text, level = 1):
