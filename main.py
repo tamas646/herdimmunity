@@ -383,7 +383,9 @@ class MainThread(threading.Thread):
 					self._time += self._tick * self._herdimmunity.speed_ratio
 				self._herdimmunity.refresh_simulation_area(self._time)
 			else:
-				self._time = 0
+				if self._time > 0:
+					self._time = 0
+					self.entities = []
 			time.sleep(self._tick / 1000.0)
 		self.print_debug('Thread stopped')
 
