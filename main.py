@@ -170,6 +170,7 @@ class MainWindow(Gtk.Window):
 		Gtk.Window.__init__(self)
 		self.set_default_size(600, 300)
 		self.set_resizable(True)
+		self.set_icon_name('face-sick')
 
 		# -----------  Header bar  -----------
 
