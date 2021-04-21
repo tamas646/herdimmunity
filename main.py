@@ -20,8 +20,8 @@ class HerdImmunity:
 		self.entities = []
 		# simulation settings
 		self.entity_velocity = 20 # in px/seconds
-		self._initial_virus_carrier_number = 2
-		self._entity_number = 25
+		self.initial_virus_carrier_number = 2
+		self.entity_number = 100
 		self.infection_chance = 12 # 0-100 %
 		self.healing_time = 12 # in seconds
 		self.immunity_time = 30 # in seconds
@@ -53,8 +53,8 @@ class HerdImmunity:
 		"""
 		# raffle infected entities
 		infected_entities = []
-		for i in range(self._initial_virus_carrier_number):
-			index = randint(1, self._entity_number) - 1
+		for i in range(self.initial_virus_carrier_number):
+			index = randint(1, self.entity_number) - 1
 			while index in infected_entities:
 				index += 1
 			infected_entities.append(index)
@@ -62,7 +62,7 @@ class HerdImmunity:
 		self.area_size = self._window.get_area_size()
 		# generate entities
 		self.entities = []
-		for i in range(self._entity_number):
+		for i in range(self.entity_number):
 			is_infected = i in infected_entities
 			position = (randint(0, self.area_size[0] - 1), randint(0, self.area_size[1] - 1))
 			direction = uniform(0, math.pi)
@@ -90,9 +90,39 @@ class HerdImmunity:
 		self.print_debug('Stopping simulation...')
 		self._main_thread.s_stop()
 
-	def change_simulation_speed(self, speed_ratio):
-		self.print_debug('Changing simulation speed to ' + str(speed_ratio) + 'x')
-		self.speed_ratio = speed_ratio
+	def change_settings(self, **kwargs):
+		for key in kwargs:
+			if key == 'speed_ratio':
+				self.print_debug('Changing simulation speed to ' + str(kwargs[key]) + 'x')
+				self.speed_ratio = kwargs[key]
+
+			elif key == 'entity_velocity':
+				self.print_debug('Changing entity velocity to ' + str(kwargs[key]) + ' px/sec')
+				self.entity_velocity = kwargs[key]
+
+			elif key == 'entity_number':
+				self.print_debug('Changing entity number to ' + str(kwargs[key]))
+				self.entity_number = kwargs[key]
+
+			elif key == 'initial_virus_carrier_number':
+				self.print_debug('Changing initial virus carrier number to ' + str(kwargs[key]))
+				self.initial_virus_carrier_number = kwargs[key]
+
+			elif key == 'infection_chance':
+				self.print_debug('Changing infection chance to ' + str(kwargs[key]) + '%')
+				self.infection_chance = kwargs[key]
+
+			elif key == 'healing_time':
+				self.print_debug('Changing healing time to ' + str(kwargs[key]) + ' sec')
+				self.healing_time = kwargs[key]
+
+			elif key == 'immunity_time':
+				self.print_debug('Changing immunity time to ' + str(kwargs[key]) + ' sec')
+				self.immunity_time = kwargs[key]
+
+			elif key == 'infectious_distance':
+				self.print_debug('Changing infectious distance to ' + str(kwargs[key]) + ' px')
+				self.infectious_distance = kwargs[key]
 
 	def infect_random(self):
 		self._main_thread.s_infect_random()
@@ -241,7 +271,7 @@ class MainWindow(Gtk.Window):
 		self._pause_button.set_sensitive(False)
 		self._speedup_button.set_sensitive(False)
 		self._zero_infection_reached = False
-		self._pause_on_zero_infection = True
+		self._pause_on_zero_infection = False
 		self._speedup_ratio = 5
 		self._border_color = (0.7, 0.7, 0.7)
 		self._border_width = 10
@@ -302,13 +332,41 @@ class MainWindow(Gtk.Window):
 	def _speedup(self, widget):
 		if widget.get_active():
 			self.print_debug('Speedup button pressed')
-			self._herdimmunity.change_simulation_speed(self._speedup_ratio)
+			self._herdimmunity.change_settings(speed_ratio=self._speedup_ratio)
 		else:
 			self.print_debug('Speedup button released')
-			self._herdimmunity.change_simulation_speed(1)
+			self._herdimmunity.change_settings(speed_ratio=1)
 
 	def _properties(self, widget):
 		self.print_debug('Properties button clicked')
+		dialog = SettingsDialog(self)
+		dialog.pause_on_zero_infection.set_active(self._pause_on_zero_infection)
+		dialog.speedup_ratio.set_value(self._speedup_ratio)
+		dialog.entity_velocity.set_value(self._herdimmunity.entity_velocity)
+		dialog.entity_number.set_value(self._herdimmunity.entity_number)
+		dialog.initial_virus_carrier_number.set_value(self._herdimmunity.initial_virus_carrier_number)
+		dialog.infection_chance.set_value(self._herdimmunity.infection_chance)
+		dialog.healing_time.set_value(self._herdimmunity.healing_time)
+		dialog.immunity_time.set_value(self._herdimmunity.immunity_time)
+		dialog.infectious_distance.set_value(self._herdimmunity.infectious_distance)
+		self.print_debug('Showing settings dialog...')
+		response = dialog.run()
+		if response == Gtk.ResponseType.OK:
+			self.print_debug('Applying changes...')
+			self._pause_on_zero_infection = dialog.pause_on_zero_infection.get_active()
+			self._speedup_ratio = dialog.speedup_ratio.get_value()
+			self._herdimmunity.change_settings(
+				speed_ratio=(self._speedup_ratio if self._speedup_button.get_active() else 1),
+				entity_velocity=dialog.entity_velocity.get_value(),
+				entity_number=dialog.entity_number.get_value(),
+				initial_virus_carrier_number=dialog.initial_virus_carrier_number.get_value(),
+				infection_chance=dialog.infection_chance.get_value(),
+				healing_time=dialog.healing_time.get_value(),
+				immunity_time=dialog.immunity_time.get_value(),
+				infectious_distance=dialog.infectious_distance.get_value()
+			)
+		dialog.destroy()
+		self.print_debug('Settings dialog closed')
 
 	def _infect_random(self, widget):
 		self.print_debug('Infect random button clicked')
@@ -361,6 +419,109 @@ class MainWindow(Gtk.Window):
 
 
 # ======  End of MainWindow Class  =======
+
+
+# ============================================
+# =           SettingsDialog Class           =
+# ============================================
+
+class SettingsDialog(Gtk.Dialog):
+	def __init__(self, parent):
+		Gtk.Dialog.__init__(self, 'Beállítások', parent, modal=True)
+		self.add_button('Mégsem', Gtk.ResponseType.CANCEL)
+		self.add_button('Mentés', Gtk.ResponseType.OK)
+		# self.set_default_size(200, 100)
+		self.set_border_width(10)
+		self.set_resizable(False)
+
+		area = self.get_content_area()
+
+		settings_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, margin_bottom=10)
+
+		box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, margin_bottom=10)
+		box.pack_start(Gtk.Label(label='Megállítás a fertőzés megszűnésekor'), False, False, 0)
+		self.pause_on_zero_infection = Gtk.Switch(margin_left=10)
+		box.pack_end(self.pause_on_zero_infection, False, False, 0)
+		settings_box.pack_start(box, False, False, 0)
+
+		box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, margin_bottom=10)
+		box.pack_start(Gtk.Label(label='Gyorsítási szorzó:'), False, False, 0)
+		self.speedup_ratio = Gtk.SpinButton(margin_left=10)
+		self.speedup_ratio.set_range(1, 100)
+		self.speedup_ratio.set_increments(1, 1)
+		self.speedup_ratio.set_digits(2)
+		box.pack_end(self.speedup_ratio, False, False, 0)
+		settings_box.pack_start(box, False, False, 0)
+
+		box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, margin_bottom=10)
+		box.pack_start(Gtk.Label(label='Ágensek sebessége (pixel/mp):'), False, False, 0)
+		self.entity_velocity = Gtk.SpinButton(margin_left=10)
+		self.entity_velocity.set_range(0, 100)
+		self.entity_velocity.set_increments(1, 1)
+		self.entity_velocity.set_digits(2)
+		box.pack_end(self.entity_velocity, False, False, 0)
+		settings_box.pack_start(box, False, False, 0)
+
+		box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, margin_bottom=10)
+		box.pack_start(Gtk.Label(label='Ágensek száma:'), False, False, 0)
+		self.entity_number = Gtk.SpinButton(margin_left=10)
+		self.entity_number.set_range(1, 1000)
+		self.entity_number.set_increments(1, 1)
+		self.entity_number.set_digits(0)
+		box.pack_end(self.entity_number, False, False, 0)
+		settings_box.pack_start(box, False, False, 0)
+
+		box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, margin_bottom=10)
+		box.pack_start(Gtk.Label(label='Kezdeti ferzőzöttek száma:'), False, False, 0)
+		self.initial_virus_carrier_number = Gtk.SpinButton(margin_left=10)
+		self.initial_virus_carrier_number.set_range(0, 1000)
+		self.initial_virus_carrier_number.set_increments(1, 1)
+		self.initial_virus_carrier_number.set_digits(0)
+		box.pack_end(self.initial_virus_carrier_number, False, False, 0)
+		settings_box.pack_start(box, False, False, 0)
+
+		box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, margin_bottom=10)
+		box.pack_start(Gtk.Label(label='Megfertőződés valószínűsége (%):'), False, False, 0)
+		self.infection_chance = Gtk.SpinButton(margin_left=10)
+		self.infection_chance.set_range(0, 100)
+		self.infection_chance.set_increments(1, 1)
+		self.infection_chance.set_digits(0)
+		box.pack_end(self.infection_chance, False, False, 0)
+		settings_box.pack_start(box, False, False, 0)
+
+		box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, margin_bottom=10)
+		box.pack_start(Gtk.Label(label='Gyógyulási idő (mp):'), False, False, 0)
+		self.healing_time = Gtk.SpinButton(margin_left=10)
+		self.healing_time.set_range(0, 3600)
+		self.healing_time.set_increments(1, 1)
+		self.healing_time.set_digits(0)
+		box.pack_end(self.healing_time, False, False, 0)
+		settings_box.pack_start(box, False, False, 0)
+
+		box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, margin_bottom=10)
+		box.pack_start(Gtk.Label(label='Immunitás ideje (mp):'), False, False, 0)
+		self.immunity_time = Gtk.SpinButton(margin_left=10)
+		self.immunity_time.set_range(0, 3600)
+		self.immunity_time.set_increments(1, 1)
+		self.immunity_time.set_digits(0)
+		box.pack_end(self.immunity_time, False, False, 0)
+		settings_box.pack_start(box, False, False, 0)
+
+		box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, margin_bottom=10)
+		box.pack_start(Gtk.Label(label='Fertőzési távolság (pixel):'), False, False, 0)
+		self.infectious_distance = Gtk.SpinButton(margin_left=10)
+		self.infectious_distance.set_range(0, 1000)
+		self.infectious_distance.set_increments(1, 1)
+		self.infectious_distance.set_digits(0)
+		box.pack_end(self.infectious_distance, False, False, 0)
+		settings_box.pack_start(box, False, False, 0)
+
+		area.add(settings_box)
+
+		self.show_all()
+
+
+# ======  End of SettingsDialog Class  =======
 
 
 # ========================================
