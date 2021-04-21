@@ -358,12 +358,12 @@ class MainWindow(Gtk.Window):
 			self._herdimmunity.change_settings(
 				speed_ratio=(self._speedup_ratio if self._speedup_button.get_active() else 1),
 				entity_velocity=dialog.entity_velocity.get_value(),
-				entity_number=dialog.entity_number.get_value(),
-				initial_virus_carrier_number=dialog.initial_virus_carrier_number.get_value(),
-				infection_chance=dialog.infection_chance.get_value(),
-				healing_time=dialog.healing_time.get_value(),
-				immunity_time=dialog.immunity_time.get_value(),
-				infectious_distance=dialog.infectious_distance.get_value()
+				entity_number=dialog.entity_number.get_value_as_int(),
+				initial_virus_carrier_number=dialog.initial_virus_carrier_number.get_value_as_int(),
+				infection_chance=dialog.infection_chance.get_value_as_int(),
+				healing_time=dialog.healing_time.get_value_as_int(),
+				immunity_time=dialog.immunity_time.get_value_as_int(),
+				infectious_distance=dialog.infectious_distance.get_value_as_int()
 			)
 		dialog.destroy()
 		self.print_debug('Settings dialog closed')
