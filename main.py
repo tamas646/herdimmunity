@@ -94,6 +94,9 @@ class HerdImmunity:
 		self.print_debug('Changing simulation speed to ' + str(speed_ratio) + 'x')
 		self.speed_ratio = speed_ratio
 
+	def infect_random(self):
+		self._main_thread.s_infect_random()
+
 	def refresh_simulation_area(self, time):
 		Gdk.threads_add_idle(GLib.PRIORITY_DEFAULT_IDLE, self._window.render_area)
 		Gdk.threads_add_idle(GLib.PRIORITY_DEFAULT_IDLE, self._window.display_info, time)
@@ -217,6 +220,10 @@ class MainWindow(Gtk.Window):
 		box.pack_start(info_area, False, False, 0)
 		self.add(box)
 
+		# Infect random entity button
+		self._infect_random_button = Gtk.Button(label='Random megfertőzés')
+		info_area.pack_end(self._infect_random_button, False, False, 0)
+
 		# -----------  Register events  -----------
 
 		self._drawing_area.connect('draw', self._draw)
@@ -225,6 +232,7 @@ class MainWindow(Gtk.Window):
 		self._speedup_button.connect('clicked', self._speedup)
 		self._stop_button.connect('clicked', self._stop)
 		self._properties_button.connect('clicked', self._properties)
+		self._infect_random_button.connect('clicked', self._infect_random)
 
 	""" Initialize window (after shown) """
 	def init(self):
@@ -302,6 +310,10 @@ class MainWindow(Gtk.Window):
 	def _properties(self, widget):
 		self.print_debug('Properties button clicked')
 
+	def _infect_random(self, widget):
+		self.print_debug('Infect random button clicked')
+		self._herdimmunity.infect_random()
+
 	""" Get the 'livable' size of the area """
 	def get_area_size(self):
 		width = self._drawing_area.get_allocated_width() - 2 * self._border_width - 2 * self._entity_radius
@@ -371,6 +383,7 @@ class MainThread(threading.Thread):
 		self._is_running = True
 		self._s_paused = False
 		self._s_started = False
+		self._s_infect_random = False
 		while self._is_running:
 			if self._s_started:
 				if not self._s_paused:
@@ -428,6 +441,20 @@ class MainThread(threading.Thread):
 						entity.position = (nx, ny)
 					# increase time
 					self._time += self._tick * self._herdimmunity.speed_ratio
+				# infect random entity
+				if self._s_infect_random:
+					self._s_infect_random = False
+					index = randint(1, len(self._herdimmunity.entities)) - 1
+					i = index
+					while self._herdimmunity.entities[i].state != HerdImmunity.Entity.STATE_HEALTHY:
+						i += 1
+						if i >= len(self._herdimmunity.entities):
+							i = 0
+						if i == index:
+							break
+					if self._herdimmunity.entities[i].state == HerdImmunity.Entity.STATE_HEALTHY:
+						self._herdimmunity.entities[i].state = HerdImmunity.Entity.STATE_INFECTED
+						self._herdimmunity.entities[i].state_time = self._time
 				self._herdimmunity.refresh_simulation_area(self._time)
 			else:
 				if self._time > 0:
@@ -450,6 +477,9 @@ class MainThread(threading.Thread):
 
 	def s_stop(self):
 		self._s_started = False
+
+	def s_infect_random(self):
+		self._s_infect_random = True
 
 	""" Terminate thread """
 	def stop(self):
