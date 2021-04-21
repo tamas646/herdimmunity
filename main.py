@@ -34,7 +34,7 @@ class HerdImmunity:
 		self._window.connect('delete-event', self.stop_app)
 		self._window.show_all()
 		self._window.init()
-		self._main_thread = MainThread(self, tick=20, debugging=False)
+		self._main_thread = MainThread(self, tick=30, debugging=False)
 		self._main_thread.start()
 		self.print_debug('Executing Gtk.main()...')
 		Gtk.main()
@@ -97,7 +97,7 @@ class HerdImmunity:
 		self.speed_ratio = speed_ratio
 
 	def refresh_simulation_area(self, time):
-		self._window.render_area()
+		Gdk.threads_add_idle(GLib.PRIORITY_DEFAULT_IDLE, self._window.render_area)
 		Gdk.threads_add_idle(GLib.PRIORITY_DEFAULT_IDLE, self._window.display_info, time)
 
 	""" Entity class """
@@ -328,7 +328,26 @@ class MainThread(threading.Thread):
 			if self._s_started:
 				if not self._s_paused:
 					# infect new entities
-
+					new_infected_entities = []
+					for i in range(len(self._herdimmunity.entities)):
+						for j in range(i, len(self._herdimmunity.entities)):
+							entity1 = self._herdimmunity.entities[i]
+							entity2 = self._herdimmunity.entities[j]
+							dx = abs(entity1.position[0] - entity2.position[0])
+							if dx > self._herdimmunity.infectious_distance:
+								continue
+							dy = abs(entity1.position[1] - entity2.position[1])
+							if dy > self._herdimmunity.infectious_distance:
+								continue
+							if math.pow(dx, 2) + math.pow(dy, 2) > math.pow(self._herdimmunity.infectious_distance, 2):
+								continue
+							if entity1.state == HerdImmunity.Entity.STATE_INFECTED and entity2.state == HerdImmunity.Entity.STATE_HEALTHY:
+								new_infected_entities.append(entity2)
+							elif entity2.state == HerdImmunity.Entity.STATE_INFECTED and entity1.state == HerdImmunity.Entity.STATE_HEALTHY:
+								new_infected_entities.append(entity1)
+					for entity in new_infected_entities:
+						entity.state = HerdImmunity.Entity.STATE_INFECTED
+						entity.state_time = self._time
 					# change entity states if necessary
 					for entity in self._herdimmunity.entities:
 						if entity.state == HerdImmunity.Entity.STATE_INFECTED:
