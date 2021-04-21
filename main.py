@@ -89,7 +89,6 @@ class HerdImmunity:
 	def stop_simulation(self):
 		self.print_debug('Stopping simulation...')
 		self._main_thread.s_stop()
-		self.refresh_simulation_area(0)
 
 	def change_simulation_speed(self, speed_ratio):
 		self.print_debug('Changing simulation speed to ' + str(speed_ratio) + 'x')
@@ -384,7 +383,8 @@ class MainThread(threading.Thread):
 			else:
 				if self._time > 0:
 					self._time = 0
-					self.entities = []
+					self._herdimmunity.entities = []
+					self._herdimmunity.refresh_simulation_area(0)
 			time.sleep(self._tick / 1000.0)
 		self.print_debug('Thread stopped')
 
