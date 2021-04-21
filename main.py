@@ -30,11 +30,11 @@ class HerdImmunity:
 	""" Main entry point """
 	def run_app(self):
 		self.print_debug('Running app...')
-		self._window = MainWindow(self, debugging=False)
+		self._window = MainWindow(self, debugging=1)
 		self._window.connect('delete-event', self.stop_app)
 		self._window.show_all()
 		self._window.init()
-		self._main_thread = MainThread(self, tick=30, debugging=False)
+		self._main_thread = MainThread(self, tick=30, debugging=1)
 		self._main_thread.start()
 		self.print_debug('Executing Gtk.main()...')
 		Gtk.main()
@@ -132,7 +132,7 @@ class MainWindow(Gtk.Window):
 	""" Constructor """
 	def __init__(self, herdimmunity, **kwargs):
 		self._herdimmunity = herdimmunity
-		self._debugging = kwargs['debugging'] if 'debugging' in kwargs else True
+		self._debugging = kwargs['debugging'] if 'debugging' in kwargs else 0
 		self.print_debug('Preparing main window...')
 		Gtk.Window.__init__(self)
 		self.set_default_size(600, 300)
@@ -225,7 +225,7 @@ class MainWindow(Gtk.Window):
 
 	""" Button events """
 	def _draw(self, widget, context):
-		self.print_debug('Drawing area...')
+		self.print_debug('Drawing area...', 2)
 		context.set_source_rgb(self._border_color[0], self._border_color[1], self._border_color[2])
 		max_width = widget.get_allocated_width()
 		max_height = widget.get_allocated_height()
@@ -294,8 +294,8 @@ class MainWindow(Gtk.Window):
 		self._status_label.set_label(str(time))
 
 	""" Print debug message """
-	def print_debug(self, text):
-		if self._debugging:
+	def print_debug(self, text, level = 1):
+		if self._debugging >= level:
 			self._herdimmunity.print_debug('MainWindow: ' + text)
 
 
@@ -312,7 +312,7 @@ class MainThread(threading.Thread):
 	def __init__(self, herdimmunity, **kwargs):
 		super(MainThread, self).__init__()
 		self._herdimmunity = herdimmunity
-		self._debugging = kwargs['debugging'] if 'debugging' in kwargs else True
+		self._debugging = kwargs['debugging'] if 'debugging' in kwargs else 0
 		self._tick = kwargs['tick'] if 'tick' in kwargs else 100 # in milliseconds
 
 	""" Inherited function - call start() instead """
@@ -375,13 +375,14 @@ class MainThread(threading.Thread):
 						elif ny > self._herdimmunity.area_size[1]:
 							ny = entity.position[1] - dy
 							entity.direction = 2 * math.pi - entity.direction
-						self.print_debug(f"id: {entity.id}, x: {entity.position[0]}, y: {entity.position[1]} -> dx: {dx}, dy: {dy} -> nx: {nx}, ny: {ny}")
+						self.print_debug(f"id: {entity.id}, x: {entity.position[0]}, y: {entity.position[1]} -> dx: {dx}, dy: {dy} -> nx: {nx}, ny: {ny}", 2)
 						entity.position = (nx, ny)
 					# increase time
 					self._time += self._tick * self._herdimmunity.speed_ratio
 				self._herdimmunity.refresh_simulation_area(self._time)
 			else:
 				if self._time > 0:
+					self.print_debug('Stopping simulation...')
 					self._time = 0
 					self._herdimmunity.entities = []
 					self._herdimmunity.refresh_simulation_area(0)
@@ -406,8 +407,8 @@ class MainThread(threading.Thread):
 		self._is_running = False
 
 	""" Print debug message """
-	def print_debug(self, text):
-		if self._debugging:
+	def print_debug(self, text, level = 1):
+		if self._debugging >= level:
 			self._herdimmunity.print_debug('MainThread: ' + text)
 
 
