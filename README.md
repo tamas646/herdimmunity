@@ -22,4 +22,4 @@
 
 2. Setup linux machine with GNOME desktop
 
-3. [Follow instructions](#on-linux-with-gnome-desktop)
+3. [Follow the instructions above](#on-linux-with-gnome-desktop)
