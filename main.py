@@ -190,9 +190,28 @@ class MainWindow(Gtk.Window):
 		self._drawing_area.set_size_request(360, 260)
 
 		# Information box
-		info_area = Gtk.Box(width_request=200, orientation=Gtk.Orientation.VERTICAL)
-		self._status_label = Gtk.Label(label='Megállítva')
-		info_area.pack_start(self._status_label, True, True, 0)
+		info_area = Gtk.Box(width_request=180, orientation=Gtk.Orientation.VERTICAL, margin=10)
+
+		label_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+		label_box.pack_start(Gtk.Label(label='Eltelt idő: '), False, False, 0)
+		self._time_label = Gtk.Label()
+		self._time_label.set_markup("<span face='Monospace'>-</span>")
+		label_box.pack_end(self._time_label, False, False, 0)
+		info_area.pack_start(label_box, False, False, 0)
+
+		label_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+		label_box.pack_start(Gtk.Label(label='Fertőzöttség: '), False, False, 0)
+		self._infection_label = Gtk.Label()
+		self._infection_label.set_markup("<span face='Monospace'>-</span>")
+		label_box.pack_end(self._infection_label, False, False, 0)
+		info_area.pack_start(label_box, False, False, 0)
+
+		label_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+		label_box.pack_start(Gtk.Label(label='Nyájimmunitás: '), False, False, 0)
+		self._immunity_label = Gtk.Label()
+		self._immunity_label.set_markup("<span face='Monospace'>-</span>")
+		label_box.pack_end(self._immunity_label, False, False, 0)
+		info_area.pack_start(label_box, False, False, 0)
 
 		box.pack_start(self._drawing_area, True, True, 0)
 		box.pack_start(info_area, False, False, 0)
@@ -291,7 +310,28 @@ class MainWindow(Gtk.Window):
 
 	""" Display simulation info """
 	def display_info(self, time):
-		self._status_label.set_label(str(time))
+		if time == 0:
+			self._time_label.set_markup("<span face='Monospace'>-</span>")
+			self._infection_label.set_markup("<span face='Monospace'>-</span>")
+			self._immunity_label.set_markup("<span face='Monospace'>-</span>")
+		else:
+			# display time
+			minutes = (int)(time / 1000 / 60)
+			seconds = (int)(time / 1000 % 60)
+			hundredths = (int)(time / 10 % 100)
+			self._time_label.set_markup(f"<span face='Monospace'>{'0' + str(minutes) if minutes < 10 else minutes}:{'0' + str(seconds) if seconds < 10 else seconds}.{'0' + str(hundredths) if hundredths < 10 else hundredths}</span>")
+			# display infection and immunity percentage
+			infection_sum = 0
+			immunity_sum = 0
+			count = 0
+			for entity in self._herdimmunity.entities:
+				if entity.state == HerdImmunity.Entity.STATE_INFECTED:
+					infection_sum += 1
+				elif entity.state == HerdImmunity.Entity.STATE_IMMUNE:
+					immunity_sum += 1
+				count += 1
+			self._infection_label.set_markup(f"<span face='Monospace'>{(int)(infection_sum / count * 100)}%</span>")
+			self._immunity_label.set_markup(f"<span face='Monospace'>{(int)(immunity_sum / count * 100)}%</span>")
 
 	""" Print debug message """
 	def print_debug(self, text, level = 1):
