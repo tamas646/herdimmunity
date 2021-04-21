@@ -308,6 +308,7 @@ class MainWindow(Gtk.Window):
 		self._pause_button.set_sensitive(True)
 		self._speedup_button.set_sensitive(True)
 		self.set_resizable(False)
+		self._zero_infection_reached = False
 		self._herdimmunity.start_simulation()
 
 	def _stop(self, widget):
@@ -319,7 +320,6 @@ class MainWindow(Gtk.Window):
 		self._speedup_button.set_sensitive(False)
 		self.set_resizable(True)
 		self._herdimmunity.stop_simulation()
-		self._zero_infection_reached = False
 
 	def _pause(self, widget):
 		if widget.get_active():
