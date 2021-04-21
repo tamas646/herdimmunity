@@ -89,7 +89,6 @@ class HerdImmunity:
 	def stop_simulation(self):
 		self.print_debug('Stopping simulation...')
 		self._main_thread.s_stop()
-		self.entities = []
 		self.refresh_simulation_area(0)
 
 	def change_simulation_speed(self, speed_ratio):
