@@ -545,6 +545,7 @@ class MainThread(threading.Thread):
 		self._s_paused = False
 		self._s_started = False
 		self._s_infect_random = False
+		self._actual_entity_connections = set()
 		while self._is_running:
 			if self._s_started:
 				if not self._s_paused:
@@ -556,19 +557,26 @@ class MainThread(threading.Thread):
 							entity2 = self._herdimmunity.entities[j]
 							dx = abs(entity1.position[0] - entity2.position[0])
 							if dx > self._herdimmunity.infectious_distance:
+								self._actual_entity_connections.discard((entity1.id, entity2.id))
 								continue
 							dy = abs(entity1.position[1] - entity2.position[1])
 							if dy > self._herdimmunity.infectious_distance:
+								self._actual_entity_connections.discard((entity1.id, entity2.id))
 								continue
 							if math.pow(dx, 2) + math.pow(dy, 2) > math.pow(self._herdimmunity.infectious_distance, 2):
+								self._actual_entity_connections.discard((entity1.id, entity2.id))
 								continue
+							if (entity1.id, entity2.id) in self._actual_entity_connections:
+								continue
+							self._actual_entity_connections.add((entity1.id, entity2.id))
 							if entity1.state == HerdImmunity.Entity.STATE_INFECTED and entity2.state == HerdImmunity.Entity.STATE_HEALTHY:
 								new_infected_entities.append(entity2)
 							elif entity2.state == HerdImmunity.Entity.STATE_INFECTED and entity1.state == HerdImmunity.Entity.STATE_HEALTHY:
 								new_infected_entities.append(entity1)
 					for entity in new_infected_entities:
-						entity.state = HerdImmunity.Entity.STATE_INFECTED
-						entity.state_time = self._time
+						if randint(0, 100) < self._herdimmunity.infection_chance:
+							entity.state = HerdImmunity.Entity.STATE_INFECTED
+							entity.state_time = self._time
 					# change entity states if necessary
 					for entity in self._herdimmunity.entities:
 						if entity.state == HerdImmunity.Entity.STATE_INFECTED:
@@ -621,6 +629,7 @@ class MainThread(threading.Thread):
 				if self._time > 0:
 					self.print_debug('Stopping simulation...')
 					self._time = 0
+					self._actual_entity_connections.clear()
 					self._herdimmunity.entities = []
 					self._herdimmunity.refresh_simulation_area(0)
 			time.sleep(self._tick / 1000.0)
